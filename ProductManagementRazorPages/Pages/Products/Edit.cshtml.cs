@@ -2,20 +2,24 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using ProductManagementRazorPages.SignalR;
 using Services;
 
 namespace ProductManagementRazorPages.Pages.Products
 {
     public class EditModel : PageModel
     {
-        private readonly IProductService _context;
-        private readonly ICategoryService _categoryService;
+        private readonly IProductService _contextProduct;
+        private readonly ICategoryService _contextCategory;
+        private readonly IHubContext<SignalRServer> _hubContext;
 
-        public EditModel(IProductService context, ICategoryService categoryService)
+        public EditModel(IProductService context, ICategoryService categoryService, IHubContext<SignalRServer> hubContext)
         {
-            _context = context;
-            _categoryService = categoryService;
+            _contextProduct = context;
+            _contextCategory = categoryService;
+            _hubContext = hubContext;
         }
 
         [BindProperty]
@@ -28,13 +32,13 @@ namespace ProductManagementRazorPages.Pages.Products
                 return NotFound();
             }
 
-            var product = _context.GetProductById((int)id);
+            var product = _contextProduct.GetProductById((int)id);
             if (product == null)
             {
                 return NotFound();
             }
             Product = product;
-            ViewData["CategoryId"] = new SelectList(_categoryService.GetCategories(), "CategoryId", "CategoryId");
+            ViewData["CategoryId"] = new SelectList(_contextCategory.GetCategories(), "CategoryId", "CategoryId");
             return Page();
         }
 
@@ -42,7 +46,7 @@ namespace ProductManagementRazorPages.Pages.Products
         {
             try
             {
-                _context.UpdateProduct(Product);
+                _contextProduct.UpdateProduct(Product);
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -56,12 +60,13 @@ namespace ProductManagementRazorPages.Pages.Products
                 }
             }
 
+            await _hubContext.Clients.All.SendAsync("LoadAllItems");
             return RedirectToPage("./Index");
         }
 
         private bool ProductExists(int id)
         {
-            return (_context.GetProductById(id) == null) ? true : false;
+            return (_contextProduct.GetProductById(id) == null) ? true : false;
         }
     }
 }

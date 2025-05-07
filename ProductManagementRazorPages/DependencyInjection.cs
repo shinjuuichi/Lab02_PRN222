@@ -1,4 +1,5 @@
 ﻿using DataAccessObjects;
+using ProductManagementRazorPages.SignalR;
 using Repositories;
 using Services;
 

@@ -1,17 +1,21 @@
 ﻿using BusinessObjects;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.SignalR;
+using ProductManagementRazorPages.SignalR;
 using Services;
 
 namespace ProductManagementRazorPages.Pages.Products
 {
     public class DeleteModel : PageModel
     {
-        private readonly IProductService _context;
+        private readonly IProductService _contextProduct;
+        private readonly IHubContext<SignalRServer> _hubContext;
 
-        public DeleteModel(IProductService context)
+        public DeleteModel(IProductService context, IHubContext<SignalRServer> hubContext)
         {
-            _context = context;
+            _contextProduct = context;
+            _hubContext = hubContext;
         }
 
         [BindProperty]
@@ -24,7 +28,7 @@ namespace ProductManagementRazorPages.Pages.Products
                 return NotFound();
             }
 
-            var product = _context.GetProductById((int)id);
+            var product = _contextProduct.GetProductById((int)id);
 
             if (product == null)
             {
@@ -44,11 +48,12 @@ namespace ProductManagementRazorPages.Pages.Products
                 return NotFound();
             }
 
-            var product = _context.GetProductById((int)id);
+            var product = _contextProduct.GetProductById((int)id);
             if (product != null)
             {
                 Product = product;
-                _context.DeleteProduct(product);
+                _contextProduct.DeleteProduct(product);
+                await _hubContext.Clients.All.SendAsync("LoadAllItems");
             }
 
             return RedirectToPage("./Index");
