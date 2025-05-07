@@ -11,6 +11,9 @@ namespace ProductManagementRazorPages
             // Add DbContext
             services.AddSqlServer<MyStoreContext>(configuration.GetConnectionString("MyStockDB"));
 
+            //Add SignalR
+            services.AddSignalR();
+
             // Register DAOs
             services.AddScoped<CategoryDAO>();
             services.AddScoped<ProductDAO>();
@@ -27,6 +30,13 @@ namespace ProductManagementRazorPages
             services.AddScoped<IAccountService, AccountService>();
 
             return services;
+        }
+
+        public static WebApplication UseApplicationHubs(this WebApplication app)
+        {
+            app.MapHub<SignalRServer>("/signalRServer");
+
+            return app;
         }
     }
 }
