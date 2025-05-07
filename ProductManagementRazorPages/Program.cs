@@ -1,7 +1,4 @@
-using DataAccessObjects;
 using ProductManagementRazorPages;
-using Repositories;
-using Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
